@@ -1,6 +1,0 @@
-BLOCO _main_
-  CADEIA a = "asf";
-  CADEIA b = "str" + 1;
-  a = b;
-  PRINT a;
-FIM_BLOCO

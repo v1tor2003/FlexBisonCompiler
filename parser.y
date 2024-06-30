@@ -17,7 +17,9 @@
 
 %token <sval> TK_NUMBER TK_STRING TK_ID TK_ID_BLOCK TYPE 
 %token BLOCK END_BLOCK PRINT PLUS EQ NUMBER ENDL COMMA 
+
 %type <sval> expr operand
+
 %%
 program: list_stmts ;
 
@@ -27,10 +29,10 @@ list_stmts:
 
 stmt:
   decl ENDL 
-  | r_assig ENDL                
-  | BLOCK TK_ID_BLOCK           { enterScope();        }
-  | END_BLOCK                   { exitScope();         }
-  | PRINT TK_ID ENDL            { print($2); free($2); }
+  | assig ENDL                
+  | BLOCK TK_ID_BLOCK           { enterScope($2); free($2); }
+  | END_BLOCK TK_ID_BLOCK       { exitScope($2);  free($2); }
+  | PRINT TK_ID ENDL            { print($2);      free($2); }
 ; 
 
 decl:
@@ -41,34 +43,33 @@ list_decls:
   decl_assig                    
   | list_decls COMMA decl_assig 
 ;
-r_assig:
+
+assig:
   TK_ID EQ expr               {
     if($3[0] != '@') {
       Var l = lookup($1);
       if(!l.id.empty()) {
         if(l.type == expressionType($3)) assign($1, $3);
-        else std::cerr << "Error: Identifier and expression types must match." << std::endl;
+        else std::cerr << "Erro: Tipo de dado incompativel entre identificador e expressao." << std::endl;
       }else
-      std::cerr << "Error: Identifier '" << $1 << "' was not defined." << std::endl;
-      free($1); 
-      free($3);
+        std::cerr << "Erro: Identificador '" << $1 << "' nao foi declarado." << std::endl;
     } else 
-    std::cerr << "Error: Assignment expression operands types must match." << std::endl;
+      std::cerr << "Erro: Tipo de dado incompativel entre operadores da expressao." << std::endl;
+    
+    free($1); 
+    free($3);
   }
 ;
-decl_assig:
-  TK_ID EQ expr               { 
-    if($3[0] != '@') {
-      std::string t;
-      if($3[0] == '"') t = "CADEIA";
-      else t = "NUMERO";
 
-      vars.push_back(Var(t, $1, $3));
-      
-      free($1); 
-      free($3);
-    } else 
-    std::cerr << "Error: Declaration expression operands types must match." << std::endl;
+decl_assig:
+  TK_ID                         { vars.push_back(Var("", $1, "")); }
+  | TK_ID EQ expr               { 
+    if($3[0] != '@')   
+      vars.push_back(Var(expressionType($3), $1, $3));  
+    else 
+      std::cerr << "Erro: Tipo de dado incompativel entre operadores da expressao." << std::endl;
+    free($1); 
+    free($3);
   }
 ;
 
@@ -81,8 +82,10 @@ expr:
     
       if(lQuoted && rQuoted) $$ = strdup(concat($1, $3).c_str());
       else if(!lQuoted && !rQuoted) $$ = strdup(sum($1, $3).c_str());
-      else $$ = "@";
+      else $$ = strdup("@");
     } 
+    free($1);
+    free($3);
   }
 ;
 
@@ -90,7 +93,7 @@ operand:
   TK_ID  { 
     Var var = lookup($1);
     if(var.id.empty()) var = lookupVarList(vars, $1);
-    if(var.id.empty()) std::cerr << "Error: Identifier '"<< $1 <<"' was not defined." << std::endl;
+    if(var.id.empty()) std::cerr << "Erro: Identificador '"<< $1 <<"' nao foi declarado." << std::endl;
     else $$ = strdup(var.val.c_str()); 
     free($1);
   }

@@ -1,4 +1,4 @@
-$outProgramName = "prog"
+$outProgramName = "interp"
 
 $commands = @(
   "bison -d parser.y",

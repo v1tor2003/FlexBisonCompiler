@@ -8,7 +8,7 @@
 
 %%
 BLOCO             { return BLOCK; }
-FIM_BLOCO         { return END_BLOCK; }
+FIM               { return END_BLOCK; }
 PRINT             { return PRINT; }
 
 CADEIA            |
@@ -25,6 +25,5 @@ _[A-Za-z0-9]+_    { yylval.sval = strdup(yytext); return TK_ID_BLOCK; }
 ","               { return COMMA; }
 ";"               { return ENDL; }
 "+"               { return PLUS; }
-"\n"              {}
-[ \t]             {}
+[ \t\n]           {}
 %%
